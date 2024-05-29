@@ -3,11 +3,11 @@ provider "aws" {
 }
 
 resource "aws_security_group" "allow_8080" {
-  name        = "allow_8080"
-  description = "Allow 8080 inbound traffic and all outbound traffic"
+  name        = var.mySGname
+  description = "${var.mySGname} inbound traffic and all outbound traffic"
 
   tags = {
-    Name = "allow_8080"
+    Name = var.mySGname
   }
 }
 
