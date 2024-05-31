@@ -91,7 +91,7 @@ resource "aws_key_pair" "mypjykey" {
   public_key = file("~/.ssh/pjykey.pub")
 }
 
-# c. EC2 생성
+# c. EC2 생성 + user_data(docker 설치)
 data "aws_ami" "ubuntu" {
   most_recent = true
 
@@ -109,12 +109,22 @@ data "aws_ami" "ubuntu" {
 }
 
 resource "aws_instance" "myDocker" {
-  ami                    = data.aws_ami.ubuntu.id
-  instance_type          = "t2.micro"
-  key_name               = aws_key_pair.mypjykey.id
-  vpc_security_group_ids = [aws_security_group.mySG.id]
-  subnet_id              = aws_subnet.myPubSN.id
-  tags                   = var.myDocker_tags
-}
+  ami                         = data.aws_ami.ubuntu.id
+  instance_type               = "t2.micro"
+  key_name                    = aws_key_pair.mypjykey.id
+  vpc_security_group_ids      = [aws_security_group.mySG.id]
+  subnet_id                   = aws_subnet.myPubSN.id
+  user_data                   = file("userdata.tpl")
+  user_data_replace_on_change = true
+  tags                        = var.myDocker_tags
 
-# d. user_data(docker 설치)
+  provisioner "local-exec" {
+    command = templatefile("linux-ssh-config.tpl", {
+      hostname     = self.public_ip,
+      user         = "ubuntu",
+      identityfile = "~/.ssh/pjykey"
+    })
+    interpreter = ["bash", "-c"]
+    # interpreter = ["Powershell", "-Command"]
+  }
+}
