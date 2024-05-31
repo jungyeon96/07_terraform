@@ -4,7 +4,8 @@ provider "aws" {
 
 # S3 버킷 생성 (terraform remote state)
 resource "aws_s3_bucket" "remote_state" {
-  bucket = "mybucket-sol"
+  bucket        = "mybucket-sol"
+  force_destroy = true
 
   tags = {
     Name = "mybucket"
@@ -14,11 +15,11 @@ resource "aws_s3_bucket" "remote_state" {
 # DynamoDB Table 생성 (LockID)
 resource "aws_dynamodb_table" "myLocks" {
   name         = "myLocks"
-  hash_key     = "LockId"
+  hash_key     = "LockID"
   billing_mode = "PAY_PER_REQUEST"
 
   attribute {
-    name = "LockId"
+    name = "LockID"
     type = "S"
   }
 }
