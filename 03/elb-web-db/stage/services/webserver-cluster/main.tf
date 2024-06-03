@@ -116,11 +116,8 @@ resource "aws_autoscaling_group" "myASG" {
   force_delete              = true
   vpc_zone_identifier       = data.aws_subnets.default.ids
 
-  ############################
-  # (주의) TG 지정
-  # placement_group           = aws_placement_group.test.id
-  ############################
-
+  target_group_arns = [aws_lb_target_group.myTG.arn]
+  depends_on        = [aws_lb_target_group.myTG]
 
   lifecycle {
     create_before_destroy = true
@@ -136,7 +133,7 @@ resource "aws_autoscaling_group" "myASG" {
 # 1) TG 생성
 resource "aws_lb_target_group" "myTG" {
   name     = "myTG"
-  port     = 80
+  port     = 8080
   protocol = "HTTP"
   vpc_id   = data.aws_vpc.default.id
 
@@ -151,3 +148,28 @@ resource "aws_lb_target_group" "myTG" {
     unhealthy_threshold = 2
   }
 }
+
+
+# LB
+resource "aws_lb" "myALB" {
+  name               = "myALB"
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.mySG.id]
+  subnets            = data.aws_subnets.default.ids
+}
+
+# 1) LB Listener
+resource "aws_lb_listener" "front_end" {
+  load_balancer_arn = aws_lb.myALB.arn
+  port              = "8080"
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.myTG.arn
+  }
+}
+
+# 2) SB Listener Rule
+
+
